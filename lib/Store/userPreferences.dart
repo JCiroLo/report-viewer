@@ -15,11 +15,27 @@ class UserPreferences {
     _prefs = await SharedPreferences.getInstance();
   }
 
+  set username(String value) {
+    _prefs.setString('username', value);
+  }
+
+  String get username {
+    return _prefs.getString('username') ?? '';
+  }
+
   set userToken(String value) {
     _prefs.setString('userToken', value);
   }
 
   String get userToken {
     return _prefs.getString('userToken') ?? '';
+  }
+
+  set userTokenExpiration(int value) {
+    _prefs.setInt('userTokenExpiration', value);
+  }
+
+  int get userTokenExpiration {
+    return _prefs.getInt('userTokenExpiration') ?? 0;
   }
 }

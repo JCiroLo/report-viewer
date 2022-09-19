@@ -1,7 +1,10 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_progress_hud/flutter_progress_hud.dart';
+import 'package:report_app/Pages/ForgotPasswordPage.dart';
+import 'package:report_app/Pages/RegisterPage.dart';
 import 'package:report_app/Store/userPreferences.dart';
 import 'package:report_app/Widgets/FormInput.dart';
-import 'package:report_app/Widgets/Button.dart';
 import 'package:report_app/Widgets/Hyperlink.dart';
 import 'package:report_app/Services/auth.dart';
 
@@ -13,72 +16,115 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final Widget createAnAccount = Column(
-    children: const [
-      Text('¿No tienes una cuenta?', style: TextStyle(fontSize: 18)),
-      Hyperlink(
-          route: 'register',
-          text: '¡Crea una ahora!',
-          fontWeight: FontWeight.normal)
-    ],
-  );
+  Widget createAnAccount() => Column(
+        children: [
+          const Text('¿No tienes una cuenta?', style: TextStyle(fontSize: 18)),
+          Hyperlink(
+            text: '¡Crea una ahora!',
+            fontWeight: FontWeight.normal,
+            onTap: () => {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => RegisterPage(),
+                ),
+              )
+            },
+          )
+        ],
+      );
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [const _Form(), createAnAccount],
+      body: ProgressHUD(
+        backgroundRadius: const Radius.circular(100),
+        barrierColor: Colors.black26,
+        borderColor: Colors.transparent,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [const _Form(), createAnAccount()],
+        ),
       ),
     );
   }
 }
 
 class _Form extends StatefulWidget {
-  const _Form({Key? key}) : super(key: key);
+  const _Form({
+    Key? key,
+  }) : super(key: key);
 
   @override
-  State<_Form> createState() => __FormState();
+  State<_Form> createState() => _FormState();
 }
 
-class __FormState extends State<_Form> {
+class _FormState extends State<_Form> {
   final userController = TextEditingController();
   final passwordController = TextEditingController();
-  final userPreferences = UserPreferences();
+  late UserPreferences userPreferences;
 
-  final Widget loginTitle = const Text(
-    'Iniciar sesión',
-    style: TextStyle(fontSize: 28),
-  );
+  @override
+  void initState() {
+    super.initState();
 
-  final Widget forgotPassword = const Hyperlink(
-    text: '¿Olviaste tu contraseña?',
-    fontWeight: FontWeight.normal,
-    route: 'forgotPassword',
-  );
+    userPreferences = UserPreferences();
 
-  void handleLogin() async {
-    if (!mounted) return;
-    final userInfo =
-        await AuthService().login(userController.text, passwordController.text);
-    if (userInfo['status']) {
-      userPreferences.userToken = userInfo['data']['access_token'];
-      print(userPreferences.userToken);
+    if (DateTime.now().millisecondsSinceEpoch <
+        userPreferences.userTokenExpiration) {
+      if (userPreferences.userToken != '') {
+        print(userPreferences.userToken);
+
+        Future.delayed(const Duration(seconds: 1), () {
+          Navigator.pushReplacementNamed(context, '/home');
+        });
+      }
     }
   }
 
+  void handleLogin() async {
+    if (!mounted) return;
+    final progress = ProgressHUD.of(context);
+    progress!.show();
+
+    Future.delayed(const Duration(seconds: 2), () {
+      progress.dismiss();
+    });
+
+    final dynamic userInfo = await AuthService().login(
+        userController.text.toString(), passwordController.text.toString());
+
+    if (userInfo['status']) {
+      userPreferences.userToken = userInfo['data']['access_token'];
+      userPreferences.username = userController.text;
+
+      final expirationTime = DateTime.now().millisecondsSinceEpoch +
+          (userInfo['data']['expires_in'] * 1000);
+
+      userPreferences.userTokenExpiration = expirationTime as int;
+
+      Future.delayed(const Duration(seconds: 1), () {
+        Navigator.pushReplacementNamed(context, '/home');
+      });
+    } else {
+      print(userInfo);
+    }
+  }
+
+  Widget loginTitle() => const Text(
+        'Iniciar sesión',
+        style: TextStyle(fontSize: 28),
+      );
+
   @override
   Widget build(BuildContext context) {
-    final userPreferences = UserPreferences();
-    print("Preferencias: ${userPreferences.userToken}");
-
     return Container(
         margin: const EdgeInsets.only(top: 24),
         padding: const EdgeInsets.symmetric(horizontal: 32),
         child: Column(
           children: [
-            loginTitle,
+            loginTitle(),
             const SizedBox(
               height: 24,
             ),
@@ -98,11 +144,28 @@ class __FormState extends State<_Form> {
             const SizedBox(
               height: 24,
             ),
-            Button(text: 'Iniciar sesión', onPressed: handleLogin),
+            SizedBox(
+              width: double.infinity,
+              child: CupertinoButton.filled(
+                  padding: EdgeInsets.zero,
+                  onPressed: handleLogin,
+                  child: const Text('Iniciar sesión')),
+            ),
             const SizedBox(
               height: 24,
             ),
-            forgotPassword
+            Hyperlink(
+              text: '¿Olviaste tu contraseña?',
+              fontWeight: FontWeight.normal,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ForgotPasswordPage(),
+                  ),
+                );
+              },
+            )
           ],
         ));
   }

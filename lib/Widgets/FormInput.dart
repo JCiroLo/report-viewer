@@ -34,41 +34,31 @@ class _FormInputState extends State<FormInput> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.only(right: 4, top: 0, left: 0, bottom: 0),
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          boxShadow: [
-            BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                offset: const Offset(0, 4),
-                blurRadius: 5)
-          ]),
-      child: TextField(
-        controller: widget.textController,
-        autocorrect: !_passwordIsVisible,
-        keyboardType: widget.keyboardType,
-        obscureText: _passwordIsVisible,
-        cursorHeight: 23,
-        decoration: InputDecoration(
-            prefixIcon: Icon(widget.icon),
-            focusedBorder: InputBorder.none,
-            border: InputBorder.none,
-            hintText: widget.placehoder,
-            suffixIcon: widget.isPassword
-                ? IconButton(
-                    icon: Icon(!_passwordIsVisible
-                        ? Icons.visibility
-                        : Icons.visibility_off),
-                    onPressed: () {
-                      setState(() {
-                        _passwordIsVisible = !_passwordIsVisible;
-                      });
-                    },
-                  )
-                : null),
-      ),
-    );
+        margin: const EdgeInsets.symmetric(vertical: 8),
+        child: TextField(
+          controller: widget.textController,
+          autocorrect: !_passwordIsVisible,
+          keyboardType: widget.keyboardType,
+          obscureText: _passwordIsVisible,
+          cursorHeight: 23,
+          decoration: InputDecoration(
+              contentPadding: const EdgeInsets.all(0),
+              prefixIcon: Icon(widget.icon),
+              border:
+                  const OutlineInputBorder(borderSide: BorderSide(width: 1.0)),
+              hintText: widget.placehoder,
+              suffixIcon: widget.isPassword
+                  ? IconButton(
+                      icon: Icon(!_passwordIsVisible
+                          ? Icons.visibility
+                          : Icons.visibility_off),
+                      onPressed: () {
+                        setState(() {
+                          _passwordIsVisible = !_passwordIsVisible;
+                        });
+                      },
+                    )
+                  : null),
+        ));
   }
 }

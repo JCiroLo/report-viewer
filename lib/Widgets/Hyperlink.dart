@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
-
 class Hyperlink extends StatefulWidget {
-  final String route;
   final String text;
   final FontWeight fontWeight;
+  final VoidCallback onTap;
 
   const Hyperlink({
     Key? key,
-    required this.route,
     required this.text,
     required this.fontWeight,
+    required this.onTap,
   }) : super(key: key);
 
   @override
@@ -20,10 +19,7 @@ class _HyperlinkState extends State<Hyperlink> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () async {
-        if (!mounted) return;
-        Navigator.pushReplacementNamed(context, widget.route);
-      },
+      onTap: widget.onTap,
       child: Text(
         widget.text,
         style: TextStyle(
